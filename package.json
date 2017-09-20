@@ -1,6 +1,6 @@
 {
   "name": "@dnd-it-cd2/redux-form",
-  "version": "7.0.4",
+  "version": "7.0.5",
   "description": "A higher order component decorator for forms using Redux and React",
   "main": "./lib/index.js",
   "module": "./es/index.js",
