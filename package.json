@@ -71,7 +71,6 @@
     "react-is": "^16.4.1",
     "react-lifecycles-compat": "^3.0.4",
     "traverse": "^0.6.6",
-    "arr-union": "^3.1.0",
     "kind-of": "^3.0.2"
   },
   "devDependencies": {

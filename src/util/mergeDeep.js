@@ -3,9 +3,10 @@
  *
  * Copyright (c) 2014-2015, Jon Schlinkert.
  * Licensed under the MIT License.
+ *
+ * Small adjustments made by Marcel Schulze 2018
  */
 
-const union = require('arr-union')
 const _ = require('lodash')
 const typeOf = require('kind-of')
 
@@ -41,8 +42,6 @@ function merge(target, obj) {
 
     if (isObject(newVal) && isObject(oldVal)) {
       target[key] = merge(newVal, oldVal)
-    } else if (Array.isArray(newVal)) {
-      target[key] = union([], newVal, oldVal)
     } else {
       target[key] = clone(oldVal)
     }
