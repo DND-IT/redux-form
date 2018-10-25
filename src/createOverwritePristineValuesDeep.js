@@ -1,5 +1,5 @@
 import traverse from 'traverse'
-
+import _ from 'lodash'
 import mergeDeep from './util/mergeDeep'
 
 const createOverwritePristineValuesDeep = ({ getIn, deepEqual }) => (
@@ -21,12 +21,18 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual }) => (
     const newInitialValue = getIn(newInitialValues, this.path)
 
     const isDirtyOurs = isDirty(value, initialValue)
-    const wasDeleted = value && !newInitialValue
+    const isPristineOurs = !isDirtyOurs
+    const wasDeleted =
+      typeof value !== 'undefined' && typeof newInitialValue === 'undefined'
 
-    if (!isDirtyOurs && !wasDeleted) {
+    if (isPristineOurs && !wasDeleted) {
       return this.update(mergedValue)
-    } else if (!isDirtyOurs && wasDeleted) {
-      return this.delete()
+    } else if (isPristineOurs && wasDeleted) {
+      this.delete()
+
+      if (_.isEmpty(this.parent.node)) {
+        return this.parent.delete()
+      }
     } else if (isDirtyOurs) {
       return this.update(value)
     }

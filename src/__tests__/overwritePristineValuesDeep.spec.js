@@ -129,6 +129,72 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
+  it('should NOT remove a tenant variant if object', () => {
+    const initialValues = {
+      relatedContent: {
+        0: { a: 'a', b: 'b' },
+        1: { c: 'c', d: 'd' }
+      }
+    }
+
+    const newInitialValues = {
+      relatedContent: {
+        0: { a: 'a2', b: 'b' }
+      }
+    }
+
+    const values = {
+      relatedContent: {
+        0: { a: 'a', b: 'b' },
+        1: { c: 'c', d: 'd' },
+        2: { x: 'x', f: 'f' }
+      }
+    }
+
+    const newValues = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(newValues.relatedContent).toEqual({
+      0: { a: 'a2', b: 'b' },
+      2: { x: 'x', f: 'f' }
+    })
+  })
+
+  it('should NOT add a tenant variant if', () => {
+    const initialValues = {
+      relatedContent: {
+        0: ['1'],
+        1: ['2']
+      }
+    }
+
+    const newInitialValues = {
+      relatedContent: {
+        0: ['1'],
+        1: ['2']
+      }
+    }
+
+    const values = {
+      relatedContent: {
+        0: ['1', 'dirty']
+      }
+    }
+
+    const newValues = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(newValues.relatedContent).toEqual({
+      0: ['1', 'dirty']
+    })
+  })
+
   it('should do this', () => {
     const values = {
       myField: [{ name: 'One' }, { name: 'Two' }]
