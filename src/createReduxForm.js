@@ -231,6 +231,8 @@ export type Props = {
   initialized: boolean,
   initialValues?: any,
   invalid: boolean,
+  keepDirtyAtomic: boolean,
+  atoms?: string[],
   keepDirtyOnReinitialize: any,
   keepValues?: boolean,
   updateUnregisteredFields: boolean,
@@ -294,6 +296,7 @@ const createReduxForm = (structure: Structure<*, *>) => {
       shouldError: defaultShouldError,
       shouldWarn: defaultShouldWarn,
       enableReinitialize: false,
+      keepDirtyAtomic: false,
       keepDirtyOnReinitialize: false,
       updateUnregisteredFields: false,
       getFormState: state => getIn(state, 'form'),
@@ -347,7 +350,9 @@ const createReduxForm = (structure: Structure<*, *>) => {
               this.props.initialize(nextProps.initialValues, keepDirty, {
                 keepValues: nextProps.keepValues,
                 lastInitialValues: this.props.initialValues,
-                updateUnregisteredFields: nextProps.updateUnregisteredFields
+                updateUnregisteredFields: nextProps.updateUnregisteredFields,
+                keepDirtyAtomic: nextProps.keepDirtyAtomic,
+                atoms: nextProps.atoms
               })
             }
           } else if (
@@ -359,7 +364,9 @@ const createReduxForm = (structure: Structure<*, *>) => {
               this.props.keepDirtyOnReinitialize,
               {
                 keepValues: this.props.keepValues,
-                updateUnregisteredFields: this.props.updateUnregisteredFields
+                updateUnregisteredFields: this.props.updateUnregisteredFields,
+                keepDirtyAtomic: this.props.keepDirtyAtomic,
+                atoms: this.props.atoms
               }
             )
           }
@@ -874,6 +881,8 @@ const createReduxForm = (structure: Structure<*, *>) => {
             initialized,
             initialValues,
             invalid,
+            keepDirtyAtomic,
+            atoms,
             keepDirtyOnReinitialize,
             keepValues,
             updateUnregisteredFields,

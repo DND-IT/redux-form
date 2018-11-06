@@ -65,11 +65,13 @@ describe('overwritePristineValuesDeep', () => {
       }
     }
 
-    const newValues = overwritePristineValuesDeep(
+    const result = overwritePristineValuesDeep(
       values,
       initialValues,
       newInitialValues
     )
+
+    const newValues = result.newValues
 
     expect(newValues.title).toEqual('title-new')
     expect(newValues.object.b).toEqual('b-new')
@@ -113,19 +115,19 @@ describe('overwritePristineValuesDeep', () => {
       relatedContent: {
         0: ['1'],
         1: ['2'],
-        2: ['dirty', 'dirty']
+        2: ['dirty', 'dirty1']
       }
     }
 
-    const newValues = overwritePristineValuesDeep(
+    const result = overwritePristineValuesDeep(
       values,
       initialValues,
       newInitialValues
     )
 
-    expect(newValues.relatedContent).toEqual({
+    expect(result.newValues.relatedContent).toEqual({
       0: ['1', 'dirty'],
-      2: ['dirty', 'dirty']
+      2: ['dirty', 'dirty1']
     })
   })
 
@@ -151,13 +153,13 @@ describe('overwritePristineValuesDeep', () => {
       }
     }
 
-    const newValues = overwritePristineValuesDeep(
+    const result = overwritePristineValuesDeep(
       values,
       initialValues,
       newInitialValues
     )
 
-    expect(newValues.relatedContent).toEqual({
+    expect(result.newValues.relatedContent).toEqual({
       0: { a: 'a2', b: 'b' },
       2: { x: 'x', f: 'f' }
     })
@@ -184,13 +186,13 @@ describe('overwritePristineValuesDeep', () => {
       }
     }
 
-    const newValues = overwritePristineValuesDeep(
+    const result = overwritePristineValuesDeep(
       values,
       initialValues,
       newInitialValues
     )
 
-    expect(newValues.relatedContent).toEqual({
+    expect(result.newValues.relatedContent).toEqual({
       0: ['1', 'dirty']
     })
   })
@@ -207,14 +209,302 @@ describe('overwritePristineValuesDeep', () => {
       myField: [{ name: 'One' }, { name: 'Two' }, { name: 'Three' }]
     }
 
-    const newValues = overwritePristineValuesDeep(
+    const result = overwritePristineValuesDeep(
       values,
       initialValues,
       newInitialValues
     )
 
-    expect(newValues).toEqual({
+    expect(result.newValues).toEqual({
       myField: [{ name: 'One' }, { name: 'Two' }, { name: 'Three' }]
+    })
+  })
+
+  it('should do this and that', () => {
+    const values = {
+      myField: [{ name: 'One' }, { name: 'Two' }, { name: 'X' }]
+    }
+    const initialValues = {
+      myField: [{ name: 'One' }, { name: 'Two' }]
+    }
+
+    const newInitialValues = {
+      myField: [{ name: 'One' }, { name: 'Two' }, { name: 'Three' }]
+    }
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(result.newValues).toEqual({
+      myField: [
+        { name: 'One' },
+        { name: 'Two' },
+        { name: 'X' },
+        { name: 'Three' }
+      ]
+    })
+  })
+
+  it('should handle nested arrays', () => {
+    const values = {
+      myField: [
+        { name: 'One', a: ['one'] },
+        { name: 'Two', a: ['two'] },
+        { name: 'X', a: ['x'] }
+      ]
+    }
+    const initialValues = {
+      myField: [{ name: 'One', a: ['one'] }, { name: 'Two', a: ['two'] }]
+    }
+
+    const newInitialValues = {
+      myField: [
+        { name: 'One', a: ['one'] },
+        { name: 'Two', a: ['two'] },
+        { name: 'Three', a: ['three'] }
+      ]
+    }
+
+    const atoms = ['myField.(.)']
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      myField: [
+        { name: 'One', a: ['one'] },
+        { name: 'Two', a: ['two'] },
+        { name: 'X', a: ['x'] },
+        { name: 'Three', a: ['three'] }
+      ]
+    })
+  })
+
+  it('should handle nested arrays part 2', () => {
+    const values = {
+      myField: [1, 2, 3, 4]
+    }
+    const initialValues = {
+      myField: [1, 2, 3]
+    }
+
+    const newInitialValues = {
+      myField: [1, 3]
+    }
+
+    // const atoms = ['myField']
+    const atoms = []
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      myField: [1, 3, 4]
+    })
+  })
+
+  it('should bail out on atoms', () => {
+    const initialValues = {
+      something: {
+        slateField: {
+          stuff: {
+            a: 'a',
+            b: 'b'
+          },
+          moreStuff: ['a']
+        },
+        somethingNested: {
+          stuff: {
+            a: 'a',
+            b: 'b'
+          },
+          moreStuff: ['a']
+        }
+      }
+    }
+
+    const newInitialValues = {
+      something: {
+        slateField: {
+          stuff: {
+            a: 'aNew',
+            b: 'bNew'
+          },
+          moreStuff: ['a', 'new']
+        },
+        somethingNested: {
+          stuff: {
+            a: 'aNew',
+            b: 'bNew'
+          },
+          moreStuff: ['a', 'new']
+        }
+      }
+    }
+
+    const values = {
+      something: {
+        slateField: {
+          stuff: {
+            a: 'a2',
+            b: 'b'
+          },
+          moreStuff: ['a', 'a2']
+        },
+        somethingNested: {
+          stuff: {
+            a: 'a2',
+            b: 'b'
+          },
+          moreStuff: ['a', 'a2']
+        }
+      }
+    }
+
+    const atoms = [/something\.slateField/]
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      something: {
+        slateField: {
+          stuff: {
+            a: 'a2',
+            b: 'b'
+          },
+          moreStuff: ['a', 'a2']
+        },
+        somethingNested: {
+          stuff: {
+            a: 'a2',
+            b: 'bNew'
+          },
+          moreStuff: ['a', 'a2', 'new']
+        }
+      }
+    })
+  })
+
+  it('should bail out on atoms with placeholder paths', () => {
+    const initialValues = {
+      something: {
+        abc: [
+          {
+            id: 1,
+            slateField: {
+              stuff: {
+                a: 'a',
+                b: 'b'
+              },
+              moreStuff: ['a']
+            },
+            somethingNested: {
+              stuff: {
+                a: 'a',
+                b: 'b'
+              },
+              moreStuff: ['a']
+            }
+          }
+        ]
+      }
+    }
+
+    const newInitialValues = {
+      something: {
+        abc: [
+          {
+            id: 1,
+            slateField: {
+              stuff: {
+                a: 'aNew',
+                b: 'bNew'
+              },
+              moreStuff: ['a', 'new']
+            },
+            somethingNested: {
+              stuff: {
+                a: 'aNew',
+                b: 'bNew'
+              },
+              moreStuff: ['a', 'new']
+            }
+          }
+        ]
+      }
+    }
+
+    const values = {
+      something: {
+        abc: [
+          {
+            id: 1,
+            slateField: {
+              stuff: {
+                a: 'a2',
+                b: 'b'
+              },
+              moreStuff: ['a', 'a2']
+            },
+            somethingNested: {
+              stuff: {
+                a: 'a2',
+                b: 'b'
+              },
+              moreStuff: ['a', 'a2']
+            }
+          }
+        ]
+      }
+    }
+
+    const atoms = [/^something\.([^.]*)\.[^.]*.slateField$/]
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      something: {
+        abc: [
+          {
+            id: 1,
+            slateField: {
+              stuff: {
+                a: 'a2',
+                b: 'b'
+              },
+              moreStuff: ['a', 'a2']
+            },
+            somethingNested: {
+              stuff: {
+                a: 'a2',
+                b: 'bNew'
+              },
+              moreStuff: ['a', 'a2', 'new']
+            }
+          }
+        ]
+      }
     })
   })
   // it('should NOT update dirty values with new values', () => {})

@@ -467,7 +467,12 @@ const describeInitialize = (reducer, expect, { fromJS }) => () => {
     )
 
     expect(state).toEqualMap({
-      foo: { registeredFields, values: newInitial, initial: newInitial }
+      foo: {
+        registeredFields,
+        values: newInitial,
+        initial: newInitial,
+        metaValues: {}
+      }
     })
   })
 

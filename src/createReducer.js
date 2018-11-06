@@ -385,6 +385,8 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         payload,
         meta: {
           keepDirty,
+          keepDirtyAtomic,
+          atoms,
           keepSubmitSucceeded,
           updateUnregisteredFields,
           keepValues
@@ -458,10 +460,19 @@ function createReducer<M, L>(structure: Structure<M, L>) {
           }
 
           if (updateUnregisteredFields) {
-            newValues = overwritePristineValuesDeep(
+            const mergedValues = overwritePristineValuesDeep(
               previousValues,
               previousInitialValues,
-              newInitialValues
+              newInitialValues,
+              atoms
+            )
+
+            newValues = mergedValues.newValues
+
+            result = setIn(
+              result,
+              'metaValues',
+              fromJS(mergedValues.metaValues)
             )
           } else {
             forEach(keys(registeredFields), name =>
@@ -501,6 +512,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       }
       result = setIn(result, 'values', newValues)
       result = setIn(result, 'initial', newInitialValues)
+
       return result
     },
     [REGISTER_FIELD](
