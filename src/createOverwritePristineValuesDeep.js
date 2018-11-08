@@ -44,8 +44,10 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       typeof value !== 'undefined' && typeof newInitialValue === 'undefined'
 
     if (isPristineOurs && !wasDeleted) {
+      // console.log('isPristineOurs && !wasDeleted')
       this.update(newInitialValue || mergedValue)
     } else if (isPristineOurs && wasDeleted) {
+      // console.log('isPristineOurs && wasDeleted')
       this.delete()
 
       if (
@@ -64,18 +66,18 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
           })
         }
       }
-
-      // this.block()
-      // this.stop()
     } else if (isDirtyOurs) {
       if (Array.isArray(value) && Array.isArray(newInitialValue)) {
         // TODO: Clarify that there should never be an array which should have two times the exact same value in it
         const _value = _.unionWith(value, newInitialValue, arrayComparator)
 
         this.update(_value)
-        // this.block()
       } else {
         this.update(value)
+
+        if (Array.isArray(this.parent.node)) {
+          toBeCleanedUpPaths.push(this.parent.path)
+        }
         // Show modal depending on this state update, then trigger change event and resolve the conflicts
         metaValues[this.path] = {
           myValue: value,

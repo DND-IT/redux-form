@@ -314,6 +314,60 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
+  it('should handle nested arrays part 3', () => {
+    const values = {
+      myField: [1]
+    }
+    const initialValues = {
+      myField: [1, 2, 3]
+    }
+
+    const newInitialValues = {
+      myField: [1, 2, 3]
+    }
+
+    // const atoms = ['myField']
+    const atoms = []
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      myField: [1]
+    })
+  })
+
+  it('should handle nested arrays part 4', () => {
+    const values = {
+      myField: []
+    }
+    const initialValues = {
+      myField: [1, 2, 3]
+    }
+
+    const newInitialValues = {
+      myField: [1, 2, 3]
+    }
+
+    // const atoms = ['myField']
+    const atoms = []
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      myField: []
+    })
+  })
+
   it('should bail out on atoms', () => {
     const initialValues = {
       something: {
