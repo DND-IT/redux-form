@@ -12,6 +12,13 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       return a.id === b.id
     }
 
+    if (
+      typeof a.identifier !== 'undefined' &&
+      typeof b.identifier !== 'undefined'
+    ) {
+      return a.identifier === b.identifier
+    }
+
     return _.isEqual(a, b)
   }
 ) => {
@@ -57,6 +64,12 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
         this.parent.delete()
       } else if (_.isEmpty(this.parent.node)) {
         this.parent.delete()
+        if (Array.isArray(this.parent.parent.node)) {
+          this.after(function() {
+            // Make it recusrive
+            toBeCleanedUpPaths.push(this.parent.parent.path)
+          })
+        }
       } else {
         // https://github.com/substack/js-traverse/issues/48#issuecomment-142607200
         // this.remove()
@@ -67,6 +80,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
         }
       }
     } else if (isDirtyOurs) {
+      // console.log('isDirtyOurs', isDirtyOurs)
       if (Array.isArray(value) && Array.isArray(newInitialValue)) {
         // TODO: Clarify that there should never be an array which should have two times the exact same value in it
         const _value = _.unionWith(value, newInitialValue, arrayComparator)
