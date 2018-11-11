@@ -423,7 +423,7 @@ describe('overwritePristineValuesDeep', () => {
       ]
     }
 
-    // const atoms = ['myField']
+    // const atoms = [/^myField\.([^.]*)$/]
     const atoms = []
 
     const result = overwritePristineValuesDeep(
@@ -446,6 +446,297 @@ describe('overwritePristineValuesDeep', () => {
           b: '3'
         }
       ]
+    })
+  })
+
+  it('should handle nested arrays part 6', () => {
+    const values = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          },
+          {
+            identifier: 3,
+            title: '3',
+            content: {
+              a: '3',
+              b: '3'
+            }
+          }
+        ]
+      }
+    }
+    const initialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          },
+          {
+            identifier: 3,
+            title: '3',
+            content: {
+              a: '3',
+              b: '3'
+            }
+          }
+        ]
+      }
+    }
+
+    const newInitialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          },
+          {
+            identifier: 3,
+            title: '3',
+            content: {
+              a: '3',
+              b: '3'
+            }
+          }
+        ]
+      }
+    }
+
+    const atoms = [/^infobox\.([^.]*)\.[^.]*.content$/]
+    // const atoms = []
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          },
+          {
+            identifier: 3,
+            title: '3',
+            content: {
+              a: '3',
+              b: '3'
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it('should handle nested arrays part 7', () => {
+    const values = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          }
+        ]
+      }
+    }
+    const initialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          }
+        ]
+      }
+    }
+
+    const newInitialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          }
+        ]
+      }
+    }
+
+    const atoms = [/^infobox\.([^.]*)\.[^.]*$/]
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          }
+        ]
+      }
+    })
+  })
+
+  it.only('should handle nested arrays part 8', () => {
+    const values = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          }
+        ]
+      }
+    }
+    const initialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          }
+        ]
+      }
+    }
+
+    const newInitialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          }
+        ]
+      }
+    }
+
+    const atoms = [/^infobox\.([^.]*)\.[^.].content$/]
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          }
+        ]
+      }
     })
   })
 

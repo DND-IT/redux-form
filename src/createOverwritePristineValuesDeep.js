@@ -65,10 +65,8 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       } else if (_.isEmpty(this.parent.node)) {
         this.parent.delete()
         if (Array.isArray(this.parent.parent.node)) {
-          this.after(function() {
-            // Make it recusrive
-            toBeCleanedUpPaths.push(this.parent.parent.path)
-          })
+          // Make it recusrive
+          toBeCleanedUpPaths.push(this.parent.parent.path)
         }
       } else {
         // https://github.com/substack/js-traverse/issues/48#issuecomment-142607200
