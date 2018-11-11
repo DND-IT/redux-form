@@ -2,6 +2,39 @@ import traverse from 'traverse'
 import _ from 'lodash'
 import mergeDeep from './util/mergeDeep'
 
+const createGetValuesByPath = ({ getIn, deepEqual }) => (
+  initialValues,
+  values,
+  newInitialValues
+) => path => {
+  const initialValue = getIn(initialValues, path)
+  const value = getIn(values, path)
+  const newInitialValue = getIn(newInitialValues, path)
+
+  const isDirty = (a, b) => !deepEqual(a, b)
+
+  const isDirtyByUs = isDirty(value, initialValue)
+  const isDirtyByThem = isDirty(initialValue, newInitialValue)
+  const isPristineByUs = !isDirtyByUs
+  const isPristineByThem = !isDirtyByThem
+  const wasDeletedByUs =
+    typeof value === 'undefined' && typeof newInitialValue !== 'undefined'
+  const wasDeletedByThem =
+    typeof value !== 'undefined' && typeof newInitialValue === 'undefined'
+
+  return {
+    initialValue,
+    value,
+    newInitialValue,
+    isDirtyByUs,
+    isDirtyByThem,
+    isPristineByUs,
+    isPristineByThem,
+    wasDeletedByUs,
+    wasDeletedByThem
+  }
+}
+
 const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
   values,
   initialValues,
@@ -22,9 +55,16 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     return _.isEqual(a, b)
   }
 ) => {
+  const getValuesByPath = createGetValuesByPath({ getIn, deepEqual })(
+    initialValues,
+    values,
+    newInitialValues
+  )
+
   const isDirty = (value, initialValue) => !deepEqual(value, initialValue)
   let metaValues = {}
   const toBeCleanedUpPaths = []
+  const cleanMap = {}
   let newValues = traverse(mergeDeep(values, newInitialValues)).map(function(
     mergedValue
   ) {
@@ -41,20 +81,25 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       }
     }
 
-    const initialValue = getIn(initialValues, this.path)
-    const value = getIn(values, this.path)
-    const newInitialValue = getIn(newInitialValues, this.path)
+    const {
+      initialValue,
+      value,
+      newInitialValue,
+      isDirtyByUs,
+      isDirtyByThem,
+      isPristineByUs,
+      isPristineByThem,
+      wasDeletedByUs,
+      wasDeletedByThem
+    } = getValuesByPath(this.path)
 
-    const isDirtyOurs = isDirty(value, initialValue)
-    const isPristineOurs = !isDirtyOurs
-    const wasDeleted =
-      typeof value !== 'undefined' && typeof newInitialValue === 'undefined'
+    // const parent = getValuesByPath(this.parent.path)
 
-    if (isPristineOurs && !wasDeleted) {
-      // console.log('isPristineOurs && !wasDeleted')
+    if (isPristineByUs && !wasDeletedByThem) {
+      // console.log('isPristineByUs && !wasDeletedByThem')
       this.update(newInitialValue || mergedValue)
-    } else if (isPristineOurs && wasDeleted) {
-      // console.log('isPristineOurs && wasDeleted')
+    } else if (isPristineByUs && wasDeletedByThem) {
+      // console.log('isPristineByUs && wasDeletedByThem')
       this.delete()
 
       if (
@@ -66,29 +111,50 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
         this.parent.delete()
         if (Array.isArray(this.parent.parent.node)) {
           // Make it recusrive
-          toBeCleanedUpPaths.push(this.parent.parent.path)
+          cleanMap[this.parent.parent.path] = getValuesByPath(
+            this.parent.parent.path
+          ).wasDeletedByUs
         }
       } else {
         // https://github.com/substack/js-traverse/issues/48#issuecomment-142607200
         // this.remove()
         if (Array.isArray(this.parent.node)) {
           this.after(function() {
-            toBeCleanedUpPaths.push(this.parent.path)
+            cleanMap[this.parent.path] = getValuesByPath(
+              this.parent.path
+            ).wasDeletedByUs
           })
         }
       }
-    } else if (isDirtyOurs) {
-      // console.log('isDirtyOurs', isDirtyOurs)
+    } else if (isDirtyByUs) {
+      // console.log('isDirtyByUs', isDirtyByUs)
       if (Array.isArray(value) && Array.isArray(newInitialValue)) {
         // TODO: Clarify that there should never be an array which should have two times the exact same value in it
         const _value = _.unionWith(value, newInitialValue, arrayComparator)
 
         this.update(_value)
       } else {
-        this.update(value)
+        if (wasDeletedByUs) {
+          this.delete()
+        } else {
+          this.update(value)
+        }
 
         if (Array.isArray(this.parent.node)) {
-          toBeCleanedUpPaths.push(this.parent.path)
+          cleanMap[this.parent.path] = getValuesByPath(
+            this.parent.path
+          ).wasDeletedByUs
+        } else if (_.isEmpty(this.parent.node)) {
+          this.parent.delete()
+          if (Array.isArray(this.parent.parent.node)) {
+            // Make it recusrive
+            cleanMap[this.parent.parent.path] = getValuesByPath(
+              this.parent.parent.path
+            ).wasDeletedByUs
+          }
+          // else if (_.isEmpty(this.parent.parent.node)) {
+          //   this.parent.parent.delete()
+          // }
         }
         // Show modal depending on this state update, then trigger change event and resolve the conflicts
         metaValues[this.path] = {
@@ -107,12 +173,17 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     // So the user can accept this change
   })
 
-  toBeCleanedUpPaths.forEach(path => {
+  _.forEach(cleanMap, (wasDeletedByUs, pathString) => {
+    const path = pathString.split(',')
+
     const cleanedValue = _.compact(getIn(newValues, path))
-    newValues = setIn(newValues, path, cleanedValue)
+    if (_.isEmpty(cleanedValue) && wasDeletedByUs) {
+      newValues = setIn(newValues, path, undefined)
+    } else {
+      newValues = setIn(newValues, path, cleanedValue)
+    }
   })
 
-  // return newValues
   return { newValues, metaValues }
 }
 

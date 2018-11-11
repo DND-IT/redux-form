@@ -654,7 +654,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it.only('should handle nested arrays part 8', () => {
+  it('should handle nested arrays part 8', () => {
     const values = {
       infobox: {
         0: [
