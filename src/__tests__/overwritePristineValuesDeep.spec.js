@@ -197,7 +197,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should do this', () => {
+  it('should use new array if values are pristine', () => {
     const values = {
       myField: [{ name: 'One' }, { name: 'Two' }]
     }
@@ -220,7 +220,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should do this and that', () => {
+  it('should merge arrays identified by deepEqual comparison of items', () => {
     const values = {
       myField: [{ name: 'One' }, { name: 'Two' }, { name: 'X' }]
     }
@@ -248,7 +248,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays', () => {
+  it('should not merge objects together if they are an atom', () => {
     const values = {
       myField: [
         { name: 'One', a: ['one'] },
@@ -287,7 +287,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 2', () => {
+  it('should add and remove items from array at the same time', () => {
     const values = {
       myField: [1, 2, 3, 4]
     }
@@ -299,14 +299,10 @@ describe('overwritePristineValuesDeep', () => {
       myField: [1, 3]
     }
 
-    // const atoms = ['myField']
-    const atoms = []
-
     const result = overwritePristineValuesDeep(
       values,
       initialValues,
-      newInitialValues,
-      atoms
+      newInitialValues
     )
 
     expect(result.newValues).toEqual({
@@ -314,7 +310,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 3', () => {
+  it('should remove simple items from array', () => {
     const values = {
       myField: [1]
     }
@@ -326,14 +322,10 @@ describe('overwritePristineValuesDeep', () => {
       myField: [1, 2, 3]
     }
 
-    // const atoms = ['myField']
-    const atoms = []
-
     const result = overwritePristineValuesDeep(
       values,
       initialValues,
-      newInitialValues,
-      atoms
+      newInitialValues
     )
 
     expect(result.newValues).toEqual({
@@ -341,7 +333,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 4', () => {
+  it('should remove all items from the array without removing the array itself', () => {
     const values = {
       myField: []
     }
@@ -353,14 +345,10 @@ describe('overwritePristineValuesDeep', () => {
       myField: [1, 2, 3]
     }
 
-    // const atoms = ['myField']
-    const atoms = []
-
     const result = overwritePristineValuesDeep(
       values,
       initialValues,
-      newInitialValues,
-      atoms
+      newInitialValues
     )
 
     expect(result.newValues).toEqual({
@@ -368,7 +356,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 5', () => {
+  it('should update and remove another object from array at the same time', () => {
     const values = {
       myField: [
         {
@@ -423,14 +411,10 @@ describe('overwritePristineValuesDeep', () => {
       ]
     }
 
-    // const atoms = [/^myField\.([^.]*)$/]
-    const atoms = []
-
     const result = overwritePristineValuesDeep(
       values,
       initialValues,
-      newInitialValues,
-      atoms
+      newInitialValues
     )
 
     expect(result.newValues).toEqual({
@@ -449,7 +433,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 6', () => {
+  it('should update and remove another object from array in a more complex case', () => {
     const values = {
       infobox: {
         0: [
@@ -535,7 +519,6 @@ describe('overwritePristineValuesDeep', () => {
     }
 
     const atoms = [/^infobox\.([^.]*)\.[^.]*.content$/]
-    // const atoms = []
 
     const result = overwritePristineValuesDeep(
       values,
@@ -568,7 +551,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 7', () => {
+  it('should update and remove another object from array in a different case', () => {
     const values = {
       infobox: {
         0: [
@@ -654,7 +637,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should handle nested arrays part 8', () => {
+  it('should update and remove another object from array in a different case 2', () => {
     const values = {
       infobox: {
         0: [
@@ -933,11 +916,4 @@ describe('overwritePristineValuesDeep', () => {
       }
     })
   })
-  // it('should NOT update dirty values with new values', () => {})
-
-  // it('should update deeply nested pristine values with new values', () => {})
-
-  // it('should add new values', () => {})
-
-  // it('should remove old values if pristine', () => {})
 })
