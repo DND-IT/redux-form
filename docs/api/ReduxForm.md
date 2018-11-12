@@ -116,6 +116,18 @@ at "design time" or passed in as props to your component at runtime.**
 > expected and avoid edge cases. It defaults to `false` because of non-breaking
 > backwards compatibility.
 
+#### `keepDirtyAtomic : boolean` [optional]
+
+> Similar to keepDirtyOnReinitialize. Will update every
+> initialValue which is still pristine on the smallest scale possible (normally only on fieldName level)
+> In the general case, the smallest scale is the leaf of the tree, but you can
+> specify your own smallest scale by providing an array of regex pattern to match, called atoms.
+
+#### `atoms : Array<Regex>` [optional]
+
+> Used in combination with `keepDirtyAtomic`. Let's you define the "smallest scale" with an regex path pattern
+> Example: `[ /^infobox\.([^.]*)\.[^.]*$/ ]` => infobox.variant.arrayIndex
+
 #### `onChange : Function` [optional]
 
 > A callback function that will be called with all the form values any time any

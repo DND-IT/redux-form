@@ -147,13 +147,13 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
 
     // WIP: Handling of conflicts
     // Show modal depending on this state update, then trigger change event and resolve the conflicts
-    if (isDirtyByUs && isDirtyByThem) {
-      metaValues[this.path] = {
-        myValue: value,
-        newValue: newInitialValue,
-        resolved: false
-      }
-    }
+    // if ((stopHere || this.isLeaf) && (isDirtyByUs && isDirtyByThem)) {
+    //   metaValues[this.path] = {
+    //     myValue: value,
+    //     newValue: newInitialValue,
+    //     resolved: false
+    //   }
+    // }
   })
 
   _.forEach(markedToBeCleanedUp, (wasDeletedByUs, pathString) => {
