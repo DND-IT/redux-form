@@ -64,6 +64,16 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     newInitialValues
   )
 
+  const removeItemFromArray = parent => {
+    // Workaround for this.remove()
+    // https://github.com/substack/js-traverse/issues/48#issuecomment-142607200
+    parent.after(() => {
+      markedToBeCleanedUp[parent.path] = getValuesByPath(
+        parent.path
+      ).wasDeletedByUs
+    })
+  }
+
   const cleanUpParents = parent => {
     if (
       (Array.isArray(parent.node) && _.isEmpty(_.compact(parent.node))) ||
@@ -74,14 +84,8 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
         cleanUpParents(parent.parent)
       }
     } else {
-      // https://github.com/substack/js-traverse/issues/48#issuecomment-142607200
-      // this.remove()
       if (Array.isArray(parent.node)) {
-        parent.after(function() {
-          markedToBeCleanedUp[parent.path] = getValuesByPath(
-            parent.path
-          ).wasDeletedByUs
-        })
+        removeItemFromArray(parent)
       }
     }
   }
@@ -96,8 +100,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     )
 
     if (this.notLeaf && !Array.isArray(mergedValue)) {
-      if (stopHere) {
-      } else {
+      if (!stopHere) {
         return mergedValue
       }
     }
@@ -123,7 +126,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     } else if (isDirtyByUs) {
       // console.log('isDirtyByUs', isDirtyByUs)
       if (Array.isArray(value) && Array.isArray(newInitialValue)) {
-        // TODO: Clarify that there should never be an array which should have two times the exact same value in it
+        // TODO: Assumption that there should never be an array which should have two times the same item in it
         const _value = _.unionWith(value, newInitialValue, arrayComparator)
 
         this.update(_value)
@@ -142,14 +145,12 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       this.block()
     }
 
-    // Else if newInitialValue but dirty, then dispatch action with content information
-    // So the user can accept this change
+    // WIP: Handling of conflicts
+    // Show modal depending on this state update, then trigger change event and resolve the conflicts
     if (isDirtyByUs && isDirtyByThem) {
-      // Show modal depending on this state update, then trigger change event and resolve the conflicts
       metaValues[this.path] = {
         myValue: value,
         newValue: newInitialValue,
-        // needed?;
         resolved: false
       }
     }
