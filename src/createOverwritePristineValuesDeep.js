@@ -6,12 +6,19 @@ const createGetValuesByPath = ({ getIn, deepEqual }) => (
   initialValues,
   values,
   newInitialValues
-) => path => {
+) => (path, parent) => {
   const initialValue = getIn(initialValues, path)
   const value = getIn(values, path)
   const newInitialValue = getIn(newInitialValues, path)
 
   const isDirty = (a, b) => !deepEqual(a, b)
+
+  // console.log('isArray', parent.node)
+  // if (Array.isArray(parent.node)) {
+  // }
+
+  console.log('value', value)
+  console.log('initialValue', initialValue)
 
   const isDirtyByUs = isDirty(value, initialValue)
   const isDirtyByThem = isDirty(initialValue, newInitialValue)
@@ -93,7 +100,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
   let newValues = traverse(mergeDeep(values, newInitialValues)).map(function(
     mergedValue
   ) {
-    // console.log('this.path', this.path)
+    console.log('this.path', this.path)
     const stopHere = atoms.reduce(
       (a, b) => a || RegExp(b).test(this.path.join('.')),
       false
@@ -113,23 +120,41 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       isPristineByUs,
       wasDeletedByUs,
       wasDeletedByThem
-    } = getValuesByPath(this.path)
+    } = getValuesByPath(this.path, this.parent)
 
     if (isPristineByUs && !wasDeletedByThem) {
-      // console.log('isPristineByUs && !wasDeletedByThem')
+      console.log('isPristineByUs && !wasDeletedByThem')
       this.update(newInitialValue || mergedValue)
     } else if (isPristineByUs && wasDeletedByThem) {
-      // console.log('isPristineByUs && wasDeletedByThem')
+      console.log('isPristineByUs && wasDeletedByThem')
       this.delete()
 
       cleanUpParents(this.parent)
     } else if (isDirtyByUs) {
-      // console.log('isDirtyByUs', isDirtyByUs)
+      console.log('isDirtyByUs', isDirtyByUs)
       if (Array.isArray(value) && Array.isArray(newInitialValue)) {
         // TODO: Assumption that there should never be an array which should have two times the same item in it
         const _value = _.unionWith(value, newInitialValue, arrayComparator)
+        console.log('value', value)
+        console.log('newInitialValue', newInitialValue)
+        const _valueX = _value.map(obj => {
+          if (typeof obj === 'object') {
+            const obj2 =
+              newInitialValue.find(obj2 => arrayComparator(obj2, obj)) || {}
+            return Object.assign({}, obj, obj2)
+          }
 
-        this.update(_value)
+          return obj
+        })
+        console.log('_valueX', _valueX)
+        console.log('_value', _value)
+
+        this.update(_valueX)
+
+        if (!_.isEqual(_value, _valueX)) {
+          this.block()
+        }
+        this.block()
       } else {
         if (wasDeletedByUs) {
           this.delete()

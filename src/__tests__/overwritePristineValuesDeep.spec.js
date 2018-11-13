@@ -723,6 +723,108 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
+  it('should update and reorder at the same time', () => {
+    const values = {
+      infobox: {
+        0: [
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          },
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          }
+        ]
+      }
+    }
+    const initialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1',
+            content: {
+              a: '1',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          }
+        ]
+      }
+    }
+
+    const newInitialValues = {
+      infobox: {
+        0: [
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          },
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          }
+        ]
+      }
+    }
+
+    const atoms = [/^infobox\.([^.]*)\.[^.].content$/]
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues,
+      atoms
+    )
+
+    expect(result.newValues).toEqual({
+      infobox: {
+        0: [
+          {
+            identifier: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
+          },
+          {
+            identifier: 1,
+            title: '1x',
+            content: {
+              a: '1x',
+              b: '1'
+            }
+          }
+        ]
+      }
+    })
+  })
+
   it('should bail out on atoms', () => {
     const initialValues = {
       something: {
