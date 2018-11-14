@@ -287,7 +287,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it('should add and remove items from array at the same time', () => {
+  it.only('should add and remove items from array at the same time', () => {
     const values = {
       myField: [1, 2, 3, 4]
     }

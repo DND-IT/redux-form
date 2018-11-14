@@ -6,19 +6,14 @@ const createGetValuesByPath = ({ getIn, deepEqual }) => (
   initialValues,
   values,
   newInitialValues
-) => (path, parent) => {
-  const initialValue = getIn(initialValues, path)
-  const value = getIn(values, path)
-  const newInitialValue = getIn(newInitialValues, path)
+) => path => {
+  const initialValue = path ? getIn(initialValues, path) : initialValues
+  const value = path ? getIn(values, path) : values
+  const newInitialValue = path
+    ? getIn(newInitialValues, path)
+    : newInitialValues
 
   const isDirty = (a, b) => !deepEqual(a, b)
-
-  // console.log('isArray', parent.node)
-  // if (Array.isArray(parent.node)) {
-  // }
-
-  console.log('value', value)
-  console.log('initialValue', initialValue)
 
   const isDirtyByUs = isDirty(value, initialValue)
   const isDirtyByThem = isDirty(initialValue, newInitialValue)
@@ -27,7 +22,8 @@ const createGetValuesByPath = ({ getIn, deepEqual }) => (
   const wasDeletedByUs =
     typeof value === 'undefined' && typeof newInitialValue !== 'undefined'
   const wasDeletedByThem =
-    typeof value !== 'undefined' && typeof newInitialValue === 'undefined'
+    isDirtyByThem &&
+    (typeof value !== 'undefined' && typeof newInitialValue === 'undefined')
 
   return {
     initialValue,
@@ -65,11 +61,13 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
   let metaValues = {}
   const markedToBeCleanedUp = {}
 
-  const getValuesByPath = createGetValuesByPath({ getIn, deepEqual })(
-    initialValues,
-    values,
-    newInitialValues
-  )
+  // const getValuesByPath = createGetValuesByPath({ getIn, deepEqual })(
+  //   initialValues,
+  //   values,
+  //   newInitialValues
+  // )
+
+  const getValuesByPath = createGetValuesByPath({ getIn, deepEqual })
 
   const removeItemFromArray = parent => {
     // Workaround for this.remove()
@@ -97,88 +95,139 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     }
   }
 
-  let newValues = traverse(mergeDeep(values, newInitialValues)).map(function(
-    mergedValue
+  function mergeDeepAndKeepDirty(
+    mergedValue,
+    initialValues,
+    values,
+    newInitialValues
   ) {
-    console.log('this.path', this.path)
     const stopHere = atoms.reduce(
       (a, b) => a || RegExp(b).test(this.path.join('.')),
       false
     )
 
-    if (this.notLeaf && !Array.isArray(mergedValue)) {
-      if (!stopHere) {
-        return mergedValue
-      }
+    if (_.isPlainObject(this.node) && !stopHere) {
+      return mergedValue
     }
 
-    const {
-      value,
-      newInitialValue,
-      isDirtyByUs,
-      isDirtyByThem,
-      isPristineByUs,
-      wasDeletedByUs,
-      wasDeletedByThem
-    } = getValuesByPath(this.path, this.parent)
+    // console.log('this.path', this.path)
+    console.log('this.path', this.path)
+    console.log('this.node', this.node)
+    console.log('values', values)
+    // TODO: new path of traverse...
+    const result = getValuesByPath(initialValues, values, newInitialValues)(
+      this.path
+    )
 
-    if (isPristineByUs && !wasDeletedByThem) {
-      console.log('isPristineByUs && !wasDeletedByThem')
-      this.update(newInitialValue || mergedValue)
-    } else if (isPristineByUs && wasDeletedByThem) {
-      console.log('isPristineByUs && wasDeletedByThem')
+    if (Array.isArray(this.node) && !stopHere) {
+      console.log('result', result)
+
+      const _value = _.unionWith(
+        result.value,
+        result.newInitialValue,
+        arrayComparator
+      )
+      const _valueX = _value
+        .map(value => {
+          const singleValue =
+            result.newInitialValue &&
+            result.newInitialValue.find(newValue =>
+              arrayComparator(newValue, value)
+            )
+
+          const initialValue =
+            result.initialValue &&
+            result.initialValue.find(initialValue =>
+              arrayComparator(initialValue, value)
+            )
+
+          const getValuesByPath = createGetValuesByPath({ getIn, deepEqual })(
+            initialValue,
+            value,
+            singleValue
+          )
+
+          const _result = getValuesByPath()
+
+          if (_result.wasDeletedByThem || _result.wasDeletedByUs) {
+            console.log('_result', _result)
+            return
+          }
+
+          if (value && singleValue && _.isPlainObject(value)) {
+            const _mergedValue = mergeDeep(value, singleValue)
+            console.log('repeat', _mergedValue)
+            const x = traverse(_mergedValue).map(function(v) {
+              return mergeDeepAndKeepDirty.call(
+                this,
+                v,
+                initialValue,
+                value,
+                singleValue
+              )
+            })
+
+            console.log('x', x)
+            return x
+          }
+
+          console.log('value', value)
+
+          return value
+        })
+        .filter(v => v)
+      // console.log('this.node', this.node)
+      console.log('_valueX', _valueX)
+
+      if (_valueX.length === 0) {
+        console.log('delete', this.path)
+        this.delete()
+
+        cleanUpParents(this.parent)
+      } else {
+        this.update(_valueX)
+      }
+
+      // if (
+      //   _valueX[0] &&
+      //   !_.isPlainObject(_valueX[0]) &&
+      //   !Array.isArray(_valueX[0])
+      // ) {
+      //   this.block()
+      // }
+
+      return
+      // return _valueX
+    }
+
+    if (result.isPristineByUs && !result.wasDeletedByThem) {
+      this.update(result.newInitialValue || mergedValue)
+    } else if (
+      (result.isPristineByUs && result.wasDeletedByThem) ||
+      result.wasDeletedByUs
+    ) {
       this.delete()
 
       cleanUpParents(this.parent)
-    } else if (isDirtyByUs) {
-      console.log('isDirtyByUs', isDirtyByUs)
-      if (Array.isArray(value) && Array.isArray(newInitialValue)) {
-        // TODO: Assumption that there should never be an array which should have two times the same item in it
-        const _value = _.unionWith(value, newInitialValue, arrayComparator)
-        console.log('value', value)
-        console.log('newInitialValue', newInitialValue)
-        const _valueX = _value.map(obj => {
-          if (typeof obj === 'object') {
-            const obj2 =
-              newInitialValue.find(obj2 => arrayComparator(obj2, obj)) || {}
-            return Object.assign({}, obj, obj2)
-          }
-
-          return obj
-        })
-        console.log('_valueX', _valueX)
-        console.log('_value', _value)
-
-        this.update(_valueX)
-
-        if (!_.isEqual(_value, _valueX)) {
-          this.block()
-        }
-        this.block()
-      } else {
-        if (wasDeletedByUs) {
-          this.delete()
-
-          cleanUpParents(this.parent)
-        } else {
-          this.update(value)
-        }
-      }
+    } else if (result.isDirtyByUs) {
+      this.update(result.value)
     }
 
     if (stopHere) {
       this.block()
     }
+  }
 
-    // WIP: Handling of conflicts
-    // Show modal depending on this state update, then trigger change event and resolve the conflicts
-    // if ((stopHere || this.isLeaf) && (isDirtyByUs && isDirtyByThem)) {
-    //   metaValues[this.path] = {
-    //     myValue: value,
-    //     newValue: newInitialValue,
-    //     resolved: false
-    //   }
-    // }
+  let newValues = traverse(mergeDeep(values, newInitialValues)).map(function(
+    v
+  ) {
+    return mergeDeepAndKeepDirty.call(
+      this,
+      v,
+      initialValues,
+      values,
+      newInitialValues
+    )
   })
 
   _.forEach(markedToBeCleanedUp, (wasDeletedByUs, pathString) => {
