@@ -97,6 +97,60 @@ describe('overwritePristineValuesDeep', () => {
     expect(newValues).toMatchSnapshot()
   })
 
+  it('should merge two step arrays correctly', () => {
+    const values = {
+      placement: {
+        0: {
+          categories: [2, 5, 6]
+        }
+      }
+    }
+
+    const initialValues = {
+      placement: {
+        0: {
+          categories: [2, 5]
+        }
+      }
+    }
+
+    const newInitialValues = undefined
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(result.newValues).toEqual({
+      placement: {
+        0: {
+          categories: [6]
+        }
+      }
+    })
+
+    const values2 = result.newValues // 6
+
+    const initialValues2 = newInitialValues // undefined
+
+    const newInitialValues2 = initialValues // 2, 5
+
+    const result2 = overwritePristineValuesDeep(
+      values2,
+      initialValues2,
+      newInitialValues2
+    )
+
+    expect(result2.newValues).toEqual({
+      placement: {
+        0: {
+          categories: [2, 5, 6]
+        }
+      }
+    })
+  })
+
   it('should NOT remove a tenant variant if', () => {
     const initialValues = {
       relatedContent: {
@@ -287,7 +341,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it.only('should add and remove items from array at the same time', () => {
+  it('should add and remove items from array at the same time', () => {
     const values = {
       myField: [1, 2, 3, 4]
     }
@@ -728,7 +782,7 @@ describe('overwritePristineValuesDeep', () => {
       infobox: {
         0: [
           {
-            identifier: 2,
+            id: 2,
             title: '2',
             content: {
               a: '2',
@@ -736,7 +790,7 @@ describe('overwritePristineValuesDeep', () => {
             }
           },
           {
-            identifier: 1,
+            id: 1,
             title: '1',
             content: {
               a: '1',
@@ -750,7 +804,7 @@ describe('overwritePristineValuesDeep', () => {
       infobox: {
         0: [
           {
-            identifier: 1,
+            id: 1,
             title: '1',
             content: {
               a: '1',
@@ -758,7 +812,7 @@ describe('overwritePristineValuesDeep', () => {
             }
           },
           {
-            identifier: 2,
+            id: 2,
             title: '2',
             content: {
               a: '2',
@@ -773,7 +827,7 @@ describe('overwritePristineValuesDeep', () => {
       infobox: {
         0: [
           {
-            identifier: 1,
+            id: 1,
             title: '1x',
             content: {
               a: '1x',
@@ -781,7 +835,7 @@ describe('overwritePristineValuesDeep', () => {
             }
           },
           {
-            identifier: 2,
+            id: 2,
             title: '2',
             content: {
               a: '2',
@@ -805,7 +859,7 @@ describe('overwritePristineValuesDeep', () => {
       infobox: {
         0: [
           {
-            identifier: 2,
+            id: 2,
             title: '2',
             content: {
               a: '2',
@@ -813,7 +867,7 @@ describe('overwritePristineValuesDeep', () => {
             }
           },
           {
-            identifier: 1,
+            id: 1,
             title: '1x',
             content: {
               a: '1x',

@@ -12,7 +12,7 @@ const typeOf = require('kind-of')
 
 const clone = _.cloneDeep
 
-function mergeDeep(orig, objects) {
+function mergeDeep(orig, objects, arrayComparator) {
   if (!isObject(orig) && !Array.isArray(orig)) {
     orig = {}
   }
@@ -25,13 +25,13 @@ function mergeDeep(orig, objects) {
     var val = arguments[idx]
 
     if (isObject(val) || Array.isArray(val)) {
-      merge(target, val)
+      merge(target, val, arrayComparator)
     }
   }
   return target
 }
 
-function merge(target, obj) {
+function merge(target, obj, arrayComparator) {
   for (var key in obj) {
     if (key === '__proto__' || !hasOwn(obj, key)) {
       continue
@@ -42,6 +42,8 @@ function merge(target, obj) {
 
     if (isObject(newVal) && isObject(oldVal)) {
       target[key] = merge(newVal, oldVal)
+    } else if (Array.isArray(newVal)) {
+      target[key] = _.unionWith(newVal, oldVal, arrayComparator)
     } else {
       target[key] = clone(oldVal)
     }
