@@ -132,7 +132,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
 
     const buildNewArrayComplex = (result, compare) => {
       const allPossibleItems = _.uniqWith(
-        [...(result.newInitialValue || []), ...(result.value || [])],
+        [...(result.value || []), ...(result.newInitialValue || [])],
         compare
       )
 

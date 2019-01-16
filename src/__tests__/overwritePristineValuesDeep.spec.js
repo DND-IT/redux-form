@@ -296,8 +296,8 @@ describe('overwritePristineValuesDeep', () => {
       myField: [
         { name: 'One' },
         { name: 'Two' },
-        { name: 'Three' },
-        { name: 'X' }
+        { name: 'X' },
+        { name: 'Three' }
       ]
     })
   })
@@ -335,8 +335,8 @@ describe('overwritePristineValuesDeep', () => {
       myField: [
         { name: 'One', a: ['one'] },
         { name: 'Two', a: ['two'] },
-        { name: 'Three', a: ['three'] },
-        { name: 'X', a: ['x'] }
+        { name: 'X', a: ['x'] },
+        { name: 'Three', a: ['three'] }
       ]
     })
   })
@@ -960,7 +960,7 @@ describe('overwritePristineValuesDeep', () => {
             a: 'a2',
             b: 'bNew'
           },
-          moreStuff: ['a', 'new', 'a2']
+          moreStuff: ['a', 'a2', 'new']
         }
       }
     })
@@ -1065,7 +1065,7 @@ describe('overwritePristineValuesDeep', () => {
                 a: 'a2',
                 b: 'bNew'
               },
-              moreStuff: ['a', 'new', 'a2']
+              moreStuff: ['a', 'a2', 'new']
             }
           }
         ]
