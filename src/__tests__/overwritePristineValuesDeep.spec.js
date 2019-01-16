@@ -296,8 +296,8 @@ describe('overwritePristineValuesDeep', () => {
       myField: [
         { name: 'One' },
         { name: 'Two' },
-        { name: 'X' },
-        { name: 'Three' }
+        { name: 'Three' },
+        { name: 'X' }
       ]
     })
   })
@@ -335,8 +335,8 @@ describe('overwritePristineValuesDeep', () => {
       myField: [
         { name: 'One', a: ['one'] },
         { name: 'Two', a: ['two'] },
-        { name: 'X', a: ['x'] },
-        { name: 'Three', a: ['three'] }
+        { name: 'Three', a: ['three'] },
+        { name: 'X', a: ['x'] }
       ]
     })
   })
@@ -960,13 +960,13 @@ describe('overwritePristineValuesDeep', () => {
             a: 'a2',
             b: 'bNew'
           },
-          moreStuff: ['a', 'a2', 'new']
+          moreStuff: ['a', 'new', 'a2']
         }
       }
     })
   })
 
-  it('should bail out on atoms with placeholder paths', () => {
+  it.only('should bail out on atoms with placeholder paths', () => {
     const initialValues = {
       something: {
         abc: [
