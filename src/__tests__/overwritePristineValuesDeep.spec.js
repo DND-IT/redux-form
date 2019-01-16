@@ -966,7 +966,7 @@ describe('overwritePristineValuesDeep', () => {
     })
   })
 
-  it.only('should bail out on atoms with placeholder paths', () => {
+  it('should bail out on atoms with placeholder paths', () => {
     const initialValues = {
       something: {
         abc: [
@@ -1065,7 +1065,7 @@ describe('overwritePristineValuesDeep', () => {
                 a: 'a2',
                 b: 'bNew'
               },
-              moreStuff: ['a', 'a2', 'new']
+              moreStuff: ['a', 'new', 'a2']
             }
           }
         ]
