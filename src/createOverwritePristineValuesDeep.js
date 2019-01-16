@@ -65,63 +65,6 @@ const isArrayType = result => {
   return Array.isArray(result.nextValue)
 }
 
-const determineItemType = result => {
-  if (result.newInitialValue && result.value) {
-    return (
-      typeof result.newInitialValue.filter(v => v)[0] ||
-      typeof result.value.filter(v => v)[0]
-    )
-  }
-
-  if (result.newInitialValue) {
-    return typeof result.newInitialValue.filter(v => v)[0]
-  }
-
-  if (result.value) {
-    return typeof result.value.filter(v => v)[0]
-  }
-}
-
-const arrayComparator = (a, b) => {
-  if (_.isPlainObject(a) && _.isPlainObject(b)) {
-    if (typeof a.id !== 'undefined' && typeof b.id !== 'undefined') {
-      return a.id === b.id
-    }
-
-    if (
-      typeof a.identifier !== 'undefined' &&
-      typeof b.identifier !== 'undefined'
-    ) {
-      return a.identifier === b.identifier
-    }
-  }
-
-  return _.isEqual(a, b)
-}
-
-// const buildNewArraySimple = (result, compare) => {
-//   return _.uniqBy(
-//     [...(result.value || []), ...(result.newInitialValue || [])],
-//     compare
-//   )
-// }
-
-const mergeArrays = result => {
-  const itemType = determineItemType(result)
-
-  if (itemType === 'string' || itemType === 'number') {
-    return buildNewArrayComplex(result, arrayComparator)
-  }
-
-  if (itemType === 'object') {
-    return buildNewArrayComplex(result, arrayComparator)
-  }
-
-  return result.newInitialValue
-}
-
-let limit = 0
-
 const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
   values,
   initialValues,
@@ -185,17 +128,8 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     newInitialValues,
     fullPath
   ) {
-    // console.log('Round', limit)
-    // if (limit > 4) {
-    //   this.stop()
-    //   return mergedValue
-    // } else {
-    //   limit++
-    // }
-
     const thatPath = this.path
 
-    // assumption: we handle items of arrays as atoms
     const buildNewArrayComplex = (result, compare) => {
       const allPossibleItems = _.uniqWith(
         [...(result.newInitialValue || []), ...(result.value || [])],
@@ -264,9 +198,13 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     console.log('fullPath', fullPath)
     console.log('this.path', this.path)
     if (stopHere) {
-      // not sold on the correctness of this return value??
       this.block()
-      return result.value
+
+      if (result.isDirtyByUs) {
+        return result.value
+      }
+
+      return result.newInitialValue
     }
 
     console.warn('continue')
@@ -293,7 +231,6 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
 
     if (isArrayType(result)) {
       this.update(buildNewArrayComplex(result, arrayComparator))
-      console.log('isArrayType')
       return
     }
 
