@@ -18,7 +18,7 @@ const createResult = (initialValue, value, newInitialValue, deepEqual) => {
 
   const shouldBeDeleted = (isPristineByUs && wasDeletedByThem) || wasDeletedByUs
 
-  const nextValue = isPristineByUs ? newInitialValue : value
+  const nextValue = isDirtyByUs ? value : newInitialValue
 
   return {
     initialValue,
@@ -115,7 +115,6 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       }
     } else {
       if (Array.isArray(parent.node)) {
-        // console.log('removeItemFromArray', parent.node)
         removeItemFromArray(parent)
       }
     }
@@ -173,6 +172,10 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
               })
             : res.nextValue
 
+          if (!nextValue) {
+            return acc
+          }
+
           return [...acc, nextValue]
         }
 
@@ -194,9 +197,6 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     const result = getValuesByPath(initialValues, values, newInitialValues)(
       this.path.length > 0 ? this.path : undefined
     )
-    console.log('stopHere', stopHere)
-    console.log('fullPath', fullPath)
-    console.log('this.path', this.path)
     if (stopHere) {
       this.block()
 
@@ -207,14 +207,9 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       return result.newInitialValue
     }
 
-    console.warn('continue')
-
     if (Array.isArray(mergedValue)) {
-      // console.log('stopHere', stopHere)
       this.block()
     }
-
-    // console.log('result', result)
 
     if (result.shouldBeDeleted) {
       this.delete()

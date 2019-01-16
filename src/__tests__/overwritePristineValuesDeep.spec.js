@@ -145,7 +145,9 @@ describe('overwritePristineValuesDeep', () => {
     expect(result2.newValues).toEqual({
       placement: {
         0: {
-          categories: [2, 5, 6]
+          // categories: [2, 5, 6]
+          // categories: [2, 5, 5]
+          categories: [6]
         }
       }
     })
