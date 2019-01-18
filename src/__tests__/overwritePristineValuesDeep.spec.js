@@ -861,24 +861,48 @@ describe('overwritePristineValuesDeep', () => {
       infobox: {
         0: [
           {
-            id: 2,
-            title: '2',
-            content: {
-              a: '2',
-              b: '2'
-            }
-          },
-          {
             id: 1,
             title: '1x',
             content: {
               a: '1x',
               b: '1'
             }
+          },
+          {
+            id: 2,
+            title: '2',
+            content: {
+              a: '2',
+              b: '2'
+            }
           }
         ]
       }
     })
+
+    // You could also argue that this result is correct, but we went with the first one
+    // expect(result.newValues).toEqual({
+    //   infobox: {
+    //     0: [
+    //       {
+    //         id: 2,
+    //         title: '2',
+    //         content: {
+    //           a: '2',
+    //           b: '2'
+    //         }
+    //       },
+    //       {
+    //         id: 1,
+    //         title: '1x',
+    //         content: {
+    //           a: '1x',
+    //           b: '1'
+    //         }
+    //       }
+    //     ]
+    //   }
+    // })
   })
 
   it('should bail out on atoms', () => {
@@ -1110,6 +1134,110 @@ describe('overwritePristineValuesDeep', () => {
       placement: {
         0: {
           categories: [2, 8, 5]
+        }
+      }
+    })
+  })
+
+  it('should merge two complex arrays with the correct order', () => {
+    const initialValues = {
+      infobox: {
+        0: [
+          { id: 1, title: 'a1' },
+          { id: 2, title: 'a2' },
+          { id: 3, title: 'a3' }
+        ]
+      }
+    }
+
+    const values = {
+      infobox: {
+        0: [
+          { id: 1, title: 'a1-dirty' },
+          { id: 2, title: 'a2' },
+          { id: 3, title: 'a3' }
+        ]
+      }
+    }
+
+    const newInitialValues = {
+      infobox: {
+        0: [
+          { id: 2, title: 'a2' },
+          { id: 3, title: 'a3' },
+          { id: 1, title: 'a1' }
+        ]
+      }
+    }
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(result.newValues).toEqual({
+      infobox: {
+        0: [
+          { id: 2, title: 'a2' },
+          { id: 3, title: 'a3' },
+          { id: 1, title: 'a1-dirty' }
+        ]
+      }
+    })
+  })
+
+  it('should merge fine controlled object keys', () => {
+    const initialValues = {
+      additionalSettings: {
+        0: {
+          breakingNews: false,
+          commentingEnabled: true,
+          contest: false,
+          live: false,
+          newsletterSubscribingEnabled: false
+        }
+      }
+    }
+
+    const values = {
+      additionalSettings: {
+        0: {
+          breakingNews: false,
+          commentingEnabled: true,
+          contest: true,
+          live: false,
+          newsletterSubscribingEnabled: false
+        }
+      }
+    }
+
+    const newInitialValues = {
+      additionalSettings: {
+        0: {
+          breakingNews: true,
+          commentingEnabled: true,
+          contest: false,
+          live: false,
+          newsletterSubscribingEnabled: false
+        }
+      }
+    }
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(result.newValues).toEqual({
+      additionalSettings: {
+        0: {
+          breakingNews: true,
+          commentingEnabled: true,
+          contest: true,
+          live: false,
+          newsletterSubscribingEnabled: false
         }
       }
     })

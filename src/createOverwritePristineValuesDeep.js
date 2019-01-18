@@ -49,6 +49,10 @@ const createGetValuesByPath = ({ getIn, deepEqual }) => (
   return createResult(initialValue, value, newInitialValue, deepEqual)
 }
 
+const isBooleanType = result => {
+  return typeof result.nextValue == typeof true
+}
+
 const isNumberType = result => {
   return typeof result.nextValue === 'number'
 }
@@ -184,19 +188,25 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
 
       const sortByArray = result.newInitialValue || []
 
-      // console.log('sortByArray', sortByArray)
-      // console.log('newArray', newArray)
+      const findIndex = (array, o) =>
+        _.findIndex(
+          array,
+          _o => (typeof _o === 'object' ? _o.id === o.id : _o === o)
+        )
 
       return newArray.slice().sort((a, b) => {
-        if (sortByArray.indexOf(a) !== -1 && sortByArray.indexOf(b) !== -1) {
-          return sortByArray.indexOf(a) - sortByArray.indexOf(b)
+        const indexA = findIndex(sortByArray, a)
+        const indexB = findIndex(sortByArray, b)
+
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB
         }
 
-        if (sortByArray.indexOf(a) === -1 && sortByArray.indexOf(b) === -1) {
+        if (indexA === -1 && indexB === -1) {
           return 0
         }
 
-        if (sortByArray.indexOf(a) === -1) {
+        if (indexA === -1) {
           return 1
         }
 
@@ -240,7 +250,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       return
     }
 
-    if (isNumberType(result) || isStringType(result)) {
+    if (isNumberType(result) || isStringType(result) || isBooleanType(result)) {
       this.update(result.nextValue)
       return
     }
@@ -251,7 +261,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
     }
 
     if (isObjectType(result)) {
-      const x = traverse(
+      return traverse(
         mergeDeep(result.value, result.newInitialValue, arrayComparator)
       ).forEach(function(v) {
         return mergeDeepAndKeepDirty.call(
@@ -263,8 +273,6 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
           [...(fullPath || thatPath), ...this.path]
         )
       })
-
-      return x
     }
   }
 
