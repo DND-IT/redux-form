@@ -153,7 +153,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
         )
       })
 
-      return itemResults.reduce((acc, res) => {
+      const newArray = itemResults.reduce((acc, res) => {
         if (!res.shouldBeDeleted) {
           const nextValue = isObjectType(res)
             ? traverse(
@@ -181,6 +181,27 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
 
         return acc
       }, [])
+
+      const sortByArray = result.newInitialValue || []
+
+      // console.log('sortByArray', sortByArray)
+      // console.log('newArray', newArray)
+
+      return newArray.slice().sort((a, b) => {
+        if (sortByArray.indexOf(a) !== -1 && sortByArray.indexOf(b) !== -1) {
+          return sortByArray.indexOf(a) - sortByArray.indexOf(b)
+        }
+
+        if (sortByArray.indexOf(a) === -1 && sortByArray.indexOf(b) === -1) {
+          return 0
+        }
+
+        if (sortByArray.indexOf(a) === -1) {
+          return 1
+        }
+
+        return -1
+      })
     }
 
     if (this.isRoot) {

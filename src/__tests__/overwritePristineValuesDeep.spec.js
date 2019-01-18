@@ -962,7 +962,7 @@ describe('overwritePristineValuesDeep', () => {
             a: 'a2',
             b: 'bNew'
           },
-          moreStuff: ['a', 'a2', 'new']
+          moreStuff: ['a', 'new', 'a2']
         }
       }
     })
@@ -1067,10 +1067,50 @@ describe('overwritePristineValuesDeep', () => {
                 a: 'a2',
                 b: 'bNew'
               },
-              moreStuff: ['a', 'a2', 'new']
+              moreStuff: ['a', 'new', 'a2']
             }
           }
         ]
+      }
+    })
+  })
+
+  it('should merge two arrays with the correct order', () => {
+    const initialValues = {
+      placement: {
+        0: {
+          categories: [2, 5]
+        }
+      }
+    }
+
+    const values = {
+      placement: {
+        0: {
+          categories: [2, 5]
+        }
+      }
+    }
+
+    const newInitialValues = {
+      placement: {
+        0: {
+          categories: [2, 8, 5]
+        }
+      }
+    }
+
+    const result = overwritePristineValuesDeep(
+      values,
+      initialValues,
+      newInitialValues
+    )
+
+    expect(result.newValues).toEqual({
+      placement: {
+        0: {
+          categories: [2, 8, 5]
+        }
       }
     })
   })
