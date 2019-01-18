@@ -96,8 +96,6 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
 
   const getValuesByPath = createGetValuesByPath({ getIn, deepEqual })
 
-  // const compareArrayItem = (initialItem, )
-
   const removeItemFromArray = parent => {
     // Workaround for this.remove()
     // https://github.com/substack/js-traverse/issues/48#issuecomment-142607200
@@ -189,10 +187,7 @@ const createOverwritePristineValuesDeep = ({ getIn, deepEqual, setIn }) => (
       const sortByArray = result.newInitialValue || []
 
       const findIndex = (array, o) =>
-        _.findIndex(
-          array,
-          _o => (typeof _o === 'object' ? _o.id === o.id : _o === o)
-        )
+        _.findIndex(array, _o => arrayComparator(_o, o))
 
       return newArray.slice().sort((a, b) => {
         const indexA = findIndex(sortByArray, a)
