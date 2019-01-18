@@ -467,7 +467,44 @@ const describeInitialize = (reducer, expect, { fromJS }) => () => {
     )
 
     expect(state).toEqualMap({
-      foo: { registeredFields, values: newInitial, initial: newInitial }
+      foo: {
+        registeredFields,
+        values: newInitial,
+        initial: newInitial
+      }
+    })
+  })
+
+  it('should merge complex values and add metaValues if keepDirtyAtomic', () => {
+    const values = {
+      myField: [{ name: 'One' }, { name: 'Two' }]
+    }
+    const initial = {
+      myField: [{ name: 'One' }, { name: 'Two' }]
+    }
+
+    const newInitial = {
+      myField: [{ name: 'One' }, { name: 'Two' }, { name: 'Three' }]
+    }
+
+    const registeredFields = {}
+
+    const state = reducer(
+      fromJS({ foo: { registeredFields, values, initial } }),
+      initialize('foo', newInitial, true, {
+        keepDirtyAtomic: true,
+        atoms: [/^myField\.([^.]*)$/]
+      })
+    )
+
+    expect(state).toEqualMap({
+      foo: {
+        registeredFields,
+        // Work in progress:
+        metaValues: {},
+        values: newInitial,
+        initial: newInitial
+      }
     })
   })
 

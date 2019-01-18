@@ -37,6 +37,7 @@ import {
   CLEAR_FIELDS,
   UPDATE_SYNC_WARNINGS
 } from './actionTypes'
+import createOverwritePristineValuesDeep from './createOverwritePristineValuesDeep'
 import createDeleteInWithCleanUp from './deleteInWithCleanUp'
 import plain from './structure/plain'
 import type { Action, Structure } from './types.js.flow'
@@ -75,6 +76,9 @@ function createReducer<M, L>(structure: Structure<M, L>) {
     some,
     splice
   } = structure
+  const overwritePristineValuesDeep = createOverwritePristineValuesDeep(
+    structure
+  )
   const deleteInWithCleanUp = createDeleteInWithCleanUp(structure)(shouldDelete)
   const plainDeleteInWithCleanUp = createDeleteInWithCleanUp(plain)(
     shouldDelete
@@ -381,6 +385,8 @@ function createReducer<M, L>(structure: Structure<M, L>) {
         payload,
         meta: {
           keepDirty,
+          keepDirtyAtomic,
+          atoms,
           keepSubmitSucceeded,
           updateUnregisteredFields,
           keepValues
@@ -421,7 +427,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       let newInitialValues = mapData
       let newValues = previousValues
 
-      if (keepDirty && registeredFields) {
+      if ((keepDirty && registeredFields) || keepDirtyAtomic) {
         if (!deepEqual(newInitialValues, previousInitialValues)) {
           //
           // Keep the value of dirty fields while updating the value of
@@ -453,24 +459,41 @@ function createReducer<M, L>(structure: Structure<M, L>) {
             }
           }
 
-          if (!updateUnregisteredFields) {
-            forEach(keys(registeredFields), name =>
-              overwritePristineValue(name)
+          if (keepDirtyAtomic) {
+            const mergedValues = overwritePristineValuesDeep(
+              previousValues,
+              previousInitialValues,
+              newInitialValues,
+              atoms
             )
+
+            newValues = mergedValues.newValues
+
+            result = setIn(
+              result,
+              'metaValues',
+              fromJS(mergedValues.metaValues)
+            )
+          } else {
+            if (!updateUnregisteredFields) {
+              forEach(keys(registeredFields), name =>
+                overwritePristineValue(name)
+              )
+            }
+
+            forEach(keys(newInitialValues), name => {
+              const previousInitialValue = getIn(previousInitialValues, name)
+              if (typeof previousInitialValue === 'undefined') {
+                // Add new values at the root level.
+                const newInitialValue = getIn(newInitialValues, name)
+                newValues = setIn(newValues, name, newInitialValue)
+              }
+
+              if (updateUnregisteredFields) {
+                overwritePristineValue(name)
+              }
+            })
           }
-
-          forEach(keys(newInitialValues), name => {
-            const previousInitialValue = getIn(previousInitialValues, name)
-            if (typeof previousInitialValue === 'undefined') {
-              // Add new values at the root level.
-              const newInitialValue = getIn(newInitialValues, name)
-              newValues = setIn(newValues, name, newInitialValue)
-            }
-
-            if (updateUnregisteredFields) {
-              overwritePristineValue(name)
-            }
-          })
         }
       } else {
         newValues = newInitialValues
@@ -495,6 +518,7 @@ function createReducer<M, L>(structure: Structure<M, L>) {
       }
       result = setIn(result, 'values', newValues)
       result = setIn(result, 'initial', newInitialValues)
+
       return result
     },
     [REGISTER_FIELD](
